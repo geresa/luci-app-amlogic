@@ -9,9 +9,9 @@ Provide luci operation support for Amlogic STB. The current functions include `i
 
 - [luci-lib-fs](https://github.com/ophub/luci-app-amlogic/tree/main/luci-lib-fs)
 
-Tip: It is included when compiling with [coolsnowwolf/lean](https://github.com/coolsnowwolf/lede/tree/master/package/lean/luci-lib-fs) source code. There is no need to add this dependency separately. When using other source code libraries, please check whether they are missing.
+Tip: It is included when compiling with [coolsnowwolf/lean](https://github.com/coolsnowwolf/lede/tree/master/package/lean/luci-lib-fs) or [Lienol/openwrt](https://github.com/Lienol/openwrt/tree/21.02/package/lean/luci-lib-fs) source code. There is no need to add this dependency separately. When using other source code libraries, please check whether they are missing.
 
-提示：当使用 [coolsnowwolf/lean](https://github.com/coolsnowwolf/lede/tree/master/package/lean/luci-lib-fs) 的源码库进行 OpenWrt 编译时，无须单独添加此依赖。当使用其他源码库时请自行检查是否缺少。
+提示：当使用 [coolsnowwolf/lean](https://github.com/coolsnowwolf/lede/tree/master/package/lean/luci-lib-fs) 或 [Lienol/openwrt](https://github.com/Lienol/openwrt/tree/21.02/package/lean/luci-lib-fs) 的源码库进行 OpenWrt 编译时，无须单独添加此依赖。当使用其他源码库时请自行检查是否缺少。
 
 ## Compile / 编译
 
@@ -24,13 +24,13 @@ make package/luci-app-amlogic/compile V=99
 
 # Compile
 make menuconfig
-# choose LuCI ---> 3. Applications  ---> <*> luci-app-amlogic..... Provide services for Amlogic S9xxx STB ----> save
+# choose LuCI ---> 3. Applications  ---> <*> luci-app-amlogic..... LuCI support for Amlogic S9xxx STB ----> save
 make V=99
 ```
 
 ## Screenshot / 截图
 
-![luci-app-amlogic](https://user-images.githubusercontent.com/68696949/117788651-27e4ea80-b27a-11eb-8a47-1a3133143705.gif)
+![luci-app-amlogic](https://user-images.githubusercontent.com/68696949/118104028-30215f00-b40d-11eb-9612-6b3bb1742916.gif)
 
 ## Next version function / 下一版本功能预告
 

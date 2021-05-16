@@ -3,11 +3,10 @@ local http = require "luci.http"
 local DISP = require "luci.dispatcher"
 local m, b, mlog
 
---SimpleForm for Install OpenWrt to EMMC
+--SimpleForm for nil
 m = SimpleForm("", "", nil)
 m.reset = false
 m.submit = false
-
 
 --SimpleForm for Backup Config
 b = SimpleForm("backup", translate("Backup Config"), nil)
@@ -28,7 +27,7 @@ end
 o.write = function(self, section, scope)
 
 	local x = luci.sys.exec("chmod +x /usr/bin/openwrt-backup 2>/dev/null")
-	local r = luci.sys.exec("/usr/bin/openwrt-backup -b > /tmp/amlogic.log && sync 2>/dev/null")
+	local r = luci.sys.exec("/usr/bin/openwrt-backup -b > /tmp/amlogic/amlogic.log && sync 2>/dev/null")
 
 	local sPath, sFile, fd, block
 	sPath = "/.reserved/openwrt_config.tar.gz"
@@ -69,6 +68,5 @@ mlog.submit = false
 slog = mlog:section(SimpleSection, "", translate("Display the execution log of the current operation."))
 olog = slog:option(TextValue, "")
 olog.template = "amlogic/other_log"
-
 
 return m, b, mlog

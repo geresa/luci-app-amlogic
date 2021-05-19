@@ -19,15 +19,16 @@ tolog() {
     # 01. Query local version information
     tolog "01. Query version information."
     CURRENT_KERNEL_V=$(ls /lib/modules/  2>/dev/null | grep -oE '^[1-9].[0-9]{1,2}.[0-9]+')
+    uci set amlogic.config.amlogic_kernel_version="${CURRENT_KERNEL_V}" 2>/dev/null
     tolog "01.01 current version: ${CURRENT_KERNEL_V}"
     sleep 3
 
     # 02. Download server version documentation
     tolog "02. Start checking the kernel version."
-    CONFIG_KERNEL_URL=$(uci get amlogic.config.amlogic_kernel_url 2>/dev/null)
-    [[ ! -z "${CONFIG_KERNEL_URL}" ]] || tolog "02.01 Invalid kernel download address." "1"
+    CONFIG_CHECK_URL=$(uci get amlogic.config.amlogic_check_url 2>/dev/null)
+    [[ ! -z "${CONFIG_CHECK_URL}" ]] || tolog "02.01 Invalid kernel download address." "1"
     rm -f "${TMP_CHECK_SERVER_FILE}" >/dev/null 2>&1 && sync
-    curl -sL --connect-timeout 10 --retry 2 --retry-all-errors "${CONFIG_KERNEL_URL}" -o "${TMP_CHECK_SERVER_FILE}" >/dev/null 2>&1 && sync
+    wget -c "${CONFIG_CHECK_URL}" -O "${TMP_CHECK_SERVER_FILE}" >/dev/null 2>&1 && sync
     [[ -s ${TMP_CHECK_SERVER_FILE} ]] || tolog "02.02 Invalid kernel detection file." "1"
 
     source ${TMP_CHECK_SERVER_FILE} 2>/dev/null
@@ -39,39 +40,40 @@ tolog() {
     MAIN_LINE_V=$(echo "${CURRENT_KERNEL_V}" | cut -d '.' -f2)
     if [[ "${MAIN_LINE_V}" -gt "0" ]]; then
         case "${MAIN_LINE_V}" in
-            10) uci set amlogic.config.amlogic_kernel_0510_version="${CURRENT_KERNEL_V}" 2>/dev/null
-                SERVER_KERNEL_VERSION=${amlogic_kernel_0510_version}
+            10) SERVER_KERNEL_VERSION=${amlogic_kernel_0510_version}
                 SERVER_KERNEL_BOOT=${amlogic_kernel_0510_boot}
                 SERVER_KERNEL_DTB=${amlogic_kernel_0510_dtb}
-                SERVER_KERNEL_MODULES=${amlogic_kernel_0510_modules} ;;
-            11) uci set amlogic.config.amlogic_kernel_0511_version="${CURRENT_KERNEL_V}" 2>/dev/null
-                SERVER_KERNEL_VERSION=${amlogic_kernel_0511_version}
+                SERVER_KERNEL_MODULES=${amlogic_kernel_0510_modules}
+                ;;
+            11) SERVER_KERNEL_VERSION=${amlogic_kernel_0511_version}
                 SERVER_KERNEL_BOOT=${amlogic_kernel_0511_boot}
                 SERVER_KERNEL_DTB=${amlogic_kernel_0511_dtb}
-                SERVER_KERNEL_MODULES=${amlogic_kernel_0511_modules} ;;
-            12) uci set amlogic.config.amlogic_kernel_0512_version="${CURRENT_KERNEL_V}" 2>/dev/null
-                SERVER_KERNEL_VERSION=${amlogic_kernel_0512_version}
+                SERVER_KERNEL_MODULES=${amlogic_kernel_0511_modules}
+                ;;
+            12) SERVER_KERNEL_VERSION=${amlogic_kernel_0512_version}
                 SERVER_KERNEL_BOOT=${amlogic_kernel_0512_boot}
                 SERVER_KERNEL_DTB=${amlogic_kernel_0512_dtb}
-                SERVER_KERNEL_MODULES=${amlogic_kernel_0512_modules} ;;
-            13) uci set amlogic.config.amlogic_kernel_0513_version="${CURRENT_KERNEL_V}" 2>/dev/null
-                SERVER_KERNEL_VERSION=${amlogic_kernel_0513_version}
+                SERVER_KERNEL_MODULES=${amlogic_kernel_0512_modules}
+                ;;
+            13) SERVER_KERNEL_VERSION=${amlogic_kernel_0513_version}
                 SERVER_KERNEL_BOOT=${amlogic_kernel_0513_boot}
                 SERVER_KERNEL_DTB=${amlogic_kernel_0513_dtb}
-                SERVER_KERNEL_MODULES=${amlogic_kernel_0513_modules} ;;
-             *) uci set amlogic.config.amlogic_kernel_0504_version="${CURRENT_KERNEL_V}" 2>/dev/null
-                SERVER_KERNEL_VERSION=${amlogic_kernel_0504_version}
+                SERVER_KERNEL_MODULES=${amlogic_kernel_0513_modules}
+                ;;
+             *) SERVER_KERNEL_VERSION=${amlogic_kernel_0504_version}
                 SERVER_KERNEL_BOOT=${amlogic_kernel_0504_boot}
                 SERVER_KERNEL_DTB=${amlogic_kernel_0504_dtb}
-                SERVER_KERNEL_MODULES=${amlogic_kernel_0504_modules} ;;
+                SERVER_KERNEL_MODULES=${amlogic_kernel_0504_modules}
+                ;;
         esac
-        tolog "03.01 current version: ${CURRENT_KERNEL_V}, Latest version: ${SERVER_KERNEL_VERSION}"
+        SERVER_KERNEL_VERSION_CODE=${SERVER_KERNEL_VERSION/.TF/}
+        tolog "03.01 current version: ${CURRENT_KERNEL_V}, Latest version: ${SERVER_KERNEL_VERSION_CODE}"
         sleep 3
     else
         tolog "03.02 Failed to check kernel version." "1"
     fi
 
-    if [[ "${CURRENT_KERNEL_V}" == "${SERVER_KERNEL_VERSION}" ]]; then
+    if [[ "${CURRENT_KERNEL_V}" == "${SERVER_KERNEL_VERSION_CODE}" ]]; then
         tolog "03.03 The same version, no need to update." "1"
         sleep 5
         tolog ""
@@ -79,7 +81,7 @@ tolog() {
         tolog "03.04 Automatically download the latest kernel."
 
         # Download boot file
-        curl -sL --connect-timeout 10 --retry 2 --retry-all-errors "${SERVER_KERNEL_URL}/${SERVER_KERNEL_VERSION}/${SERVER_KERNEL_BOOT}" -o "${TMP_CHECK_DIR}/${SERVER_KERNEL_BOOT}" >/dev/null 2>&1 && sync
+        wget -c "${SERVER_KERNEL_URL}/${SERVER_KERNEL_VERSION}/${SERVER_KERNEL_BOOT}" -O "${TMP_CHECK_DIR}/${SERVER_KERNEL_BOOT}" >/dev/null 2>&1 && sync
         if [[ "$?" -eq "0" && -s "${TMP_CHECK_DIR}/${SERVER_KERNEL_BOOT}" ]]; then
             tolog "03.05 ${SERVER_KERNEL_BOOT} complete."
         else
@@ -88,7 +90,7 @@ tolog() {
         sleep 3
 
         # Download dtb file
-        curl -sL --connect-timeout 10 --retry 2 --retry-all-errors "${SERVER_KERNEL_URL}/${SERVER_KERNEL_VERSION}/${SERVER_KERNEL_DTB}" -o "${TMP_CHECK_DIR}/${SERVER_KERNEL_DTB}" >/dev/null 2>&1 && sync
+        wget -c "${SERVER_KERNEL_URL}/${SERVER_KERNEL_VERSION}/${SERVER_KERNEL_DTB}" -O "${TMP_CHECK_DIR}/${SERVER_KERNEL_DTB}" >/dev/null 2>&1 && sync
         if [[ "$?" -eq "0" && -s "${TMP_CHECK_DIR}/${SERVER_KERNEL_DTB}" ]]; then
             tolog "03.07 ${SERVER_KERNEL_DTB} complete."
         else
@@ -97,7 +99,7 @@ tolog() {
         sleep 3
 
         # Download modules file
-        curl -sL --connect-timeout 10 --retry 2 --retry-all-errors "${SERVER_KERNEL_URL}/${SERVER_KERNEL_VERSION}/${SERVER_KERNEL_MODULES}" -o "${TMP_CHECK_DIR}/${SERVER_KERNEL_MODULES}" >/dev/null 2>&1 && sync
+        wget -c "${SERVER_KERNEL_URL}/${SERVER_KERNEL_VERSION}/${SERVER_KERNEL_MODULES}" -O "${TMP_CHECK_DIR}/${SERVER_KERNEL_MODULES}" >/dev/null 2>&1 && sync
         if [[ "$?" -eq "0" && -s "${TMP_CHECK_DIR}/${SERVER_KERNEL_MODULES}" ]]; then
             tolog "03.09 ${SERVER_KERNEL_MODULES} complete."
         else

@@ -48,12 +48,6 @@ echo "AUTO_MAINLINE_UBOOT: ${AUTO_MAINLINE_UBOOT}"
 echo "SPECIFY_SOC: ${SPECIFY_SOC}"
 echo "SPECIFY_DTB: ${SPECIFY_DTB}"
 
-# you can change BOOT size >= 128
-BOOT=256
-# you can change ROOT1 size >= 320
-ROOT1=1024
-# you can change ROOT2 size >= 320
-ROOT2=1024
 # shared partition can be ext4, xfs, btrfs, f2fs
 TARGET_SHARED_FSTYPE=btrfs
 
@@ -96,7 +90,6 @@ if [ "$(echo $emmc | grep mmcblk)" = "" ]; then
     exit 1
 fi
 
-echo "==================[ 10% ]=================="
 # EMMC DEVICE NAME
 EMMC_NAME="$emmc"
 EMMC_DEVPATH="/dev/$EMMC_NAME"
@@ -150,102 +143,119 @@ case  $boxtype in
          UBOOT_OVERLOAD="u-boot-x96maxplus.bin"
          MAINLINE_UBOOT="/lib/u-boot/x96maxplus-u-boot.bin.sd.bin"
          ANDROID_UBOOT="/lib/u-boot/hk1box-bootloader.img"
+         AMLOGIC_SOC="s905x3"
          ;;
       2) FDTFILE="meson-sm1-x96-max-plus-oc.dtb"
          U_BOOT_EXT=1
          UBOOT_OVERLOAD="u-boot-x96maxplus.bin"
          MAINLINE_UBOOT="/lib/u-boot/x96maxplus-u-boot.bin.sd.bin"
          ANDROID_UBOOT="/lib/u-boot/hk1box-bootloader.img"
+         AMLOGIC_SOC="s905x3"
          ;;
       3) FDTFILE="meson-sm1-hk1box-vontar-x3.dtb"
          U_BOOT_EXT=1
          UBOOT_OVERLOAD="u-boot-x96maxplus.bin"
          MAINLINE_UBOOT="/lib/u-boot/hk1box-u-boot.bin.sd.bin"
          ANDROID_UBOOT=""
+         AMLOGIC_SOC="s905x3"
          ;;
       4) FDTFILE="meson-sm1-hk1box-vontar-x3-oc.dtb"
          U_BOOT_EXT=1
          UBOOT_OVERLOAD="u-boot-x96maxplus.bin"
          MAINLINE_UBOOT="/lib/u-boot/hk1box-u-boot.bin.sd.bin"
          ANDROID_UBOOT=""
+         AMLOGIC_SOC="s905x3"
          ;;
       5) FDTFILE="meson-sm1-h96-max-x3.dtb"
          U_BOOT_EXT=1
          UBOOT_OVERLOAD="u-boot-x96maxplus.bin"
          MAINLINE_UBOOT="/lib/u-boot/h96maxx3-u-boot.bin.sd.bin"
          ANDROID_UBOOT=""
+         AMLOGIC_SOC="s905x3"
          ;;
       6) FDTFILE="meson-sm1-h96-max-x3-oc.dtb"
          U_BOOT_EXT=1
          UBOOT_OVERLOAD="u-boot-x96maxplus.bin"
          MAINLINE_UBOOT="/lib/u-boot/h96maxx3-u-boot.bin.sd.bin"
          ANDROID_UBOOT=""
+         AMLOGIC_SOC="s905x3"
          ;;
       7) FDTFILE="meson-sm1-ugoos-x3.dtb"
          U_BOOT_EXT=1
          UBOOT_OVERLOAD="u-boot-ugoos-x3.bin"
          MAINLINE_UBOOT=""
          ANDROID_UBOOT=""
+         AMLOGIC_SOC="s905x3"
          ;;
       8) FDTFILE="meson-sm1-ugoos-x3-oc.dtb"
          U_BOOT_EXT=1
          UBOOT_OVERLOAD="u-boot-ugoos-x3.bin"
          MAINLINE_UBOOT=""
          ANDROID_UBOOT=""
+         AMLOGIC_SOC="s905x3"
          ;;
       9) FDTFILE="meson-g12a-x96-max.dtb"
          U_BOOT_EXT=1
          UBOOT_OVERLOAD="u-boot-x96max.bin"
          MAINLINE_UBOOT="/lib/u-boot/x96max-u-boot.bin.sd.bin"
          ANDROID_UBOOT=""
+         AMLOGIC_SOC="s905x2"
          ;;
       10) FDTFILE="meson-g12a-x96-max-rmii.dtb"
          U_BOOT_EXT=1
          UBOOT_OVERLOAD="u-boot-x96max.bin"
          MAINLINE_UBOOT="/lib/u-boot/x96max-u-boot.bin.sd.bin"
          ANDROID_UBOOT=""
+         AMLOGIC_SOC="s905x2"
          ;;
       11) FDTFILE="meson-g12b-gtking.dtb"
          U_BOOT_EXT=1
          UBOOT_OVERLOAD="u-boot-gtkingpro.bin"
          MAINLINE_UBOOT="/lib/u-boot/gtking-u-boot.bin.sd.bin"
          ANDROID_UBOOT=""
+         AMLOGIC_SOC="s922x"
          ;;
       12) FDTFILE="meson-g12b-gtking-pro.dtb"
          U_BOOT_EXT=1
          UBOOT_OVERLOAD="u-boot-gtkingpro.bin"
          MAINLINE_UBOOT="/lib/u-boot/gtkingpro-u-boot.bin.sd.bin"
          ANDROID_UBOOT=""
+         AMLOGIC_SOC="s922x"
          ;;
       13) FDTFILE="meson-g12b-ugoos-am6.dtb"
          U_BOOT_EXT=1
          UBOOT_OVERLOAD="u-boot-gtkingpro.bin"
          MAINLINE_UBOOT="/lib/u-boot/gtkingpro-u-boot.bin.sd.bin"
          ANDROID_UBOOT=""
+         AMLOGIC_SOC="s922x"
          ;;
       14) FDTFILE="meson-gxm-octopus-planet.dtb"
          U_BOOT_EXT=1
          UBOOT_OVERLOAD="u-boot-zyxq.bin"
          MAINLINE_UBOOT=""
          ANDROID_UBOOT=""
+         AMLOGIC_SOC="s912"
          ;;
       15) FDTFILE="meson-gxl-s905d-phicomm-n1.dtb"
          U_BOOT_EXT=1
          UBOOT_OVERLOAD="u-boot-n1.bin"
          MAINLINE_UBOOT=""
          ANDROID_UBOOT="/lib/u-boot/u-boot-2015-phicomm-n1.bin"
+         AMLOGIC_SOC="s905d"
          ;;
       16) FDTFILE="meson-gxl-s905x-p212.dtb"
          U_BOOT_EXT=1
          UBOOT_OVERLOAD="u-boot-p212.bin"
          MAINLINE_UBOOT=""
          ANDROID_UBOOT=""
+         AMLOGIC_SOC="s905x"
          ;;
       99) FDTFILE=${SPECIFY_DTB}
          U_BOOT_EXT=0
          UBOOT_OVERLOAD=""
          MAINLINE_UBOOT=""
          ANDROID_UBOOT=""
+         AMLOGIC_SOC=""
          ;;
       0) cat <<EOF
 Please enter the .dtb file name of your box, do not include the path.
@@ -258,6 +268,7 @@ EOF
          UBOOT_OVERLOAD=""
          MAINLINE_UBOOT=""
          ANDROID_UBOOT=""
+         AMLOGIC_SOC=""
          ;;
       *) echo "Input error, exit!"
          exit 1
@@ -281,16 +292,16 @@ echo -e "\033[1;32m This Kernel [ ${MODULES_NOW} ] \033[0m"
 
 k510_ver=${VERSION_NOW%%.*}
 k510_maj=${VERSION_NOW##*.}
-if  [ ${k510_ver} -eq "5" ];then
+if  [ "${k510_ver}" -eq "5" ];then
     if  [ "${k510_maj}" -ge "10" ];then
-        K510=1
+        K510="1"
     else
-        K510=0
+        K510="0"
     fi
-elif [ ${k510_ver} -gt "5" ];then
-    K510=1
+elif [ "${k510_ver}" -gt "5" ];then
+    K510="1"
 else
-    K510=0
+    K510="0"
 fi
 
 # Check 5.10 kernel
@@ -333,7 +344,7 @@ for mnt in $MOUNTS; do
     if [ "$mnt" == "/opt" ]; then
         continue
     fi
-    
+
     if [ "$mnt" == "[SWAP]" ]; then
         echo "swapoff -a"
         swapoff -a
@@ -350,7 +361,6 @@ for mnt in $MOUNTS; do
     fi
 done
 
-echo "==================[ 30% ]=================="
 # Delete old partition if exists
 p=$(lsblk -l | grep -e "${EMMC_NAME}p" | wc -l)
 echo "A total of [ $p ] old partitions on EMMC will be deleted"
@@ -363,27 +373,41 @@ while [ $p -ge 1 ]; do
     p=$((p-1))
 done
 
-# Create new partition
-if [[ "${FDTFILE}" == *phicomm-n1* || "${FDTFILE}" == *octopus-planet* ]]; then
-    SKIP1=700
-    SKIP2=0
+# you can change ROOT size(MB) >= 320
+ROOT1=1024
+ROOT2=1024
+if [[ "${AMLOGIC_SOC}" == "s912" || "${AMLOGIC_SOC}" == "s905d" ]]; then
+    BOOT=512
+    BLANK1=68
+    BLANK2=184
+    BLANK3=0
+    BLANK4=0
+elif [[ "${AMLOGIC_SOC}" == "s905x" ]]; then
+    BOOT=160
+    BLANK1=700
+    BLANK2=0
+    BLANK3=0
+    BLANK4=0
 else
-    SKIP1=68
-    SKIP2=162
+    BOOT=160
+    BLANK1=68
+    BLANK2=0
+    BLANK3=162
+    BLANK4=0
 fi
 
 DST_TOTAL_MB=$((EMMC_SIZE/1024/1024))
 
-start1=$(( SKIP1 * 2048 ))
+start1=$(( BLANK1 * 2048 ))
 end1=$(( start1 + (BOOT * 2048) - 1 ))
 
-start2=$(( end1 + 1 ))
+start2=$(( (BLANK2 * 2048) + end1 + 1 ))
 end2=$(( start2 + (ROOT1 * 2048) -1 ))
 
-start3=$(( (SKIP2 * 2048) + end2 + 1 ))
+start3=$(( (BLANK3 * 2048) + end2 + 1 ))
 end3=$(( start3 + (ROOT2 * 2048) -1 ))
 
-start4=$((end3 + 1 ))
+start4=$(( (BLANK4 * 2048) + end3 + 1 ))
 end4=$(( DST_TOTAL_MB * 2048 -1 ))
 
 cat >> /tmp/fdisk.script <<EOF
@@ -464,6 +488,8 @@ EOF
             else
                 yn="n"
             fi
+        elif [[ "${AUTO_MAINLINE_UBOOT}" == "NO" ]]; then
+                yn="n"
         else
             read -p "Please choose whether to write the mainline bootloader to EMMC?  y/n " yn
         fi
@@ -496,7 +522,6 @@ if [ -x /usr/bin/fix_wifi_macaddr.sh ]; then
 fi
 
 # mkfs
-echo "==================[ 50% ]=================="
 echo "Start creating file system ... "
 echo "Create a boot file system ... "
 
@@ -555,7 +580,7 @@ EOF
 
         rm -f s905_autoscript* aml_autoscript*
 
-        if  [[ "${U_BOOT_EXT}" -eq "1" && "${K510}" -eq "1" ]]; then
+        if  [[ "${K510}" -eq "1" ]]; then
             if  [ -f u-boot.ext ]; then
                 cp -f -v u-boot.ext u-boot.emmc
             else
@@ -576,7 +601,6 @@ EOF
 done
 echo "complete."
 
-echo "==================[ 90% ]=================="
 echo "Wait for the rootfs file system to mount ... "
 i=1
 while [ $i -le $max_try ]; do
@@ -599,7 +623,7 @@ while [ $i -le $max_try ]; do
         ln -sf lib/ lib64
         ln -sf tmp/ var
         echo "complete."
-		
+
         COPY_SRC="root etc bin sbin lib opt usr www"
         echo "Copy data ... "
         for src in $COPY_SRC; do
@@ -650,7 +674,7 @@ config  mount
         option fstype 'vfat'
 
 EOF
-        
+
         cd /
         umount -f /mnt/${EMMC_NAME}p2
         break
@@ -681,6 +705,5 @@ esac
 mkdir -p /mnt/${EMMC_NAME}p4/docker /mnt/${EMMC_NAME}p4/AdGuardHome
 sync
 
-echo "==================[ 100% ]=================="
 echo "Install completed, Please unplug the USB disk and [ reboot ] the system!"
-return 0
+exit 0

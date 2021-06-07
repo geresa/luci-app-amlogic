@@ -19,7 +19,7 @@ tolog() {
 
     # 01. Query local version information
     tolog "01. Query version information."
-    CURRENT_PLUGIN_V=$(uci get amlogic.config.amlogic_plugin_version 2>/dev/null)
+    CURRENT_PLUGIN_V="$(opkg list-installed | grep 'luci-app-amlogic' | awk '{print $3}')"
     tolog "01.01 current version: ${CURRENT_PLUGIN_V}"
     sleep 3
 
@@ -75,7 +75,9 @@ tolog() {
     tolog "04 The plug is ready, you can update."
     sleep 3
 
-    rm -rf ${TMP_CHECK_SERVER_FILE} >/dev/null 2>&1
-    echo '<a href=upload>Update</a>' >$START_LOG
+    rm -rf ${TMP_CHECK_SERVER_FILE} >/dev/null 2>&1 && sync
+    #echo '<a href=upload>Update</a>' >$START_LOG
+    echo '<input type="button" class="cbi-button cbi-button-reload" value="Update" onclick="return amlogic_plugin(this)"/>' >$START_LOG
 
-    #luci.http.redirect(luci.dispatcher.build_url("admin", "system", "amlogic", "upload"))
+    exit 0
+

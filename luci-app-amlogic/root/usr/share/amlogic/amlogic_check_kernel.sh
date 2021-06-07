@@ -1,7 +1,8 @@
 #!/bin/bash
 
 # Set a fixed value
-KERNEL_DOWNLOAD_PATH="/tmp/upload"
+EMMC_NAME=$(lsblk | grep -oE '(mmcblk[0-9])' | sort | uniq)
+KERNEL_DOWNLOAD_PATH="/mnt/${EMMC_NAME}p4"
 TMP_CHECK_DIR="/tmp/amlogic"
 START_LOG=${TMP_CHECK_DIR}"/amlogic_check_kernel.log"
 LOG_FILE=${TMP_CHECK_DIR}"/amlogic.log"
@@ -20,7 +21,6 @@ tolog() {
     # 01. Query local version information
     tolog "01. Query version information."
     CURRENT_KERNEL_V=$(ls /lib/modules/  2>/dev/null | grep -oE '^[1-9].[0-9]{1,2}.[0-9]+')
-    uci set amlogic.config.amlogic_kernel_version="${CURRENT_KERNEL_V}" 2>/dev/null
     tolog "01.01 current version: ${CURRENT_KERNEL_V}"
     sleep 3
 
@@ -112,8 +112,9 @@ tolog() {
     tolog "04 The kernel is ready, you can update."
     sleep 3
 
-    rm -rf ${TMP_CHECK_SERVER_FILE} >/dev/null 2>&1
-    echo '<a href="javascript:;" onclick="return amlogic_kernel(this)">Update</a>' >$START_LOG
+    rm -rf ${TMP_CHECK_SERVER_FILE} >/dev/null 2>&1 && sync
+    #echo '<a href="javascript:;" onclick="return amlogic_kernel(this)">Update</a>' >$START_LOG
+    echo '<input type="button" class="cbi-button cbi-button-reload" value="Update" onclick="return amlogic_kernel(this)"/>' >$START_LOG
 
+    exit 0
 
-    #luci.http.redirect(luci.dispatcher.build_url("admin", "system", "amlogic", "upload"))

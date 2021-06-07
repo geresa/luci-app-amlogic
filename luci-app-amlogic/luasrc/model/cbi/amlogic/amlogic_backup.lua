@@ -1,7 +1,7 @@
 local fs = require "luci.fs"
 local http = require "luci.http"
 local DISP = require "luci.dispatcher"
-local m, b, mlog
+local m, b
 
 --SimpleForm for nil
 m = SimpleForm("", "", nil)
@@ -10,7 +10,7 @@ m.submit = false
 
 --SimpleForm for Backup Config
 b = SimpleForm("backup", translate("Backup Config"), nil)
-b.description = translate("Backup Config (openwrt_config.tar.gz) for Amlogic OpenWrt. You can [upload] this file, and the [Restore Config] button will be displayed in the [Upload file list].")
+b.description = translate("Backup config (openwrt_config.tar.gz). You can upload this file to restore the config.")
 b.reset = false
 b.submit = false
 s = b:section(SimpleSection, "", "")
@@ -61,12 +61,4 @@ end
 backupm = s:option(DummyValue, "", nil)
 backupm.template = "amlogic/other_dvalue"
 
---SimpleForm for Server Logs
-mlog = SimpleForm("amlogic_log", translate("Server Logs"), nil)
-mlog.reset = false
-mlog.submit = false
-slog = mlog:section(SimpleSection, "", translate("Display the execution log of the current operation."))
-olog = slog:option(TextValue, "")
-olog.template = "amlogic/other_log"
-
-return m, b, mlog
+return m, b

@@ -87,7 +87,7 @@ else
     echo -e "Please upload or specify the update file."
     echo -e "Upload method: system menu → file transfer → upload the update file to [ /tmp/upload/ ]"
     echo -e "Specify method: Place the update file in [ /mnt/mmcblk*p4/ ]"
-    echo -e "The supported file suffixes are: \033[1;33m *.img, *.img.xz, *.img.gz, *.7z, *.zip"
+    echo -e "The supported file suffixes are: *.img, *.img.xz, *.img.gz, *.7z, *.zip"
     echo -e "After upload the update file, run [ openwrt-update ] again."
     exit 1
 fi
@@ -226,28 +226,47 @@ fi
 #update version prompt
 source /boot/uEnv.txt 2>/dev/null
 CUR_FDTFILE=${FDT}
-echo -e "\033[1;32m FDT Value [ ${CUR_FDTFILE} ] \033[0m"
+echo -e "FDT Value [ ${CUR_FDTFILE} ]"
+cp /boot/uEnv.txt /tmp/uEnv.txt && sync
 
 MODULES_OLD=$(ls /lib/modules/ 2>/dev/null)
 VERSION_OLD=$(echo ${MODULES_OLD} | grep -oE '^[1-9].[0-9]{1,2}' 2>/dev/null)
 MODULES_NOW=$(ls ${P2}/lib/modules/ 2>/dev/null)
 VERSION_NOW=$(echo ${MODULES_NOW} | grep -oE '^[1-9].[0-9]{1,2}' 2>/dev/null)
-echo -e "\033[1;32m update from [ ${MODULES_OLD} ] to [ ${MODULES_NOW} ] \033[0m"
+echo -e "Update from [ ${MODULES_OLD} ] to [ ${MODULES_NOW} ]"
 
-# openwrt-env info
-if  [ ! -f ${P2}/lib/u-boot/openwrt-env ]; then
-    echo -e "Missing update information record file: [ ${P2}/lib/u-boot/openwrt-env ]"
-    exit 1
+k510_ver=${VERSION_NOW%%.*}
+k510_maj=${VERSION_NOW##*.}
+if  [ "${k510_ver}" -eq "5" ];then
+    if  [ "${k510_maj}" -ge "10" ];then
+        K510="1"
+    else
+        K510="0"
+    fi
+elif [ "${k510_ver}" -gt "5" ];then
+    K510="1"
 else
-    source ${P2}/lib/u-boot/openwrt-env 2>/dev/null
+    K510="0"
+fi
+
+# flippy-openwrt-release info
+MAINLINE_UBOOT=""
+ANDROID_UBOOT=""
+if [ -f ${P2}/etc/flippy-openwrt-release ]; then
+    source ${P2}/etc/flippy-openwrt-release 2>/dev/null
+    # Update the parameters used
+    MAINLINE_UBOOT=${MAINLINE_UBOOT}
+    ANDROID_UBOOT=${ANDROID_UBOOT}
+
+    # Unused parameters
     FDTFILE=${FDTFILE}
     U_BOOT_EXT=${U_BOOT_EXT}
     UBOOT_OVERLOAD=${UBOOT_OVERLOAD}
-    MAINLINE_UBOOT=${MAINLINE_UBOOT}
-    ANDROID_UBOOT=${ANDROID_UBOOT}
-    AMLOGIC_SOC=${AMLOGIC_SOC}
     KERNEL_VERSION=${KERNEL_VERSION}
-    K510=${K510}
+    SOC=${SOC}
+
+    # With assigned parameters
+    #K510=${K510}
 fi
 
 # Check 5.10 kernel
@@ -339,26 +358,16 @@ echo "Copy data complete ..."
 
 BACKUP_LIST=$(${P2}/usr/bin/openwrt-backup -p)
 if [[ "${BR_FLAG}" -eq "1" && -n "${BACKUP_LIST}" ]];then
-    # restore old config files
-    OLD_RELEASE=$(grep "DISTRIB_REVISION=" /etc/openwrt_release | awk -F "'" '{print $2}'|awk -F 'R' '{print $2}' | awk -F '.' '{printf("%02d%02d%02d\n", $1,$2,$3)}')
-    NEW_RELEASE=$(grep "DISTRIB_REVISION=" ./etc/uci-defaults/99-default-settings | awk -F "'" '{print $2}'|awk -F 'R' '{print $2}' | awk -F '.' '{printf("%02d%02d%02d\n", $1,$2,$3)}')
-    if  [ ${OLD_RELEASE} -le 200311 ] && [ ${NEW_RELEASE} -ge 200319 ];then
-        mv ./etc/config/shadowsocksr ./etc/config/shadowsocksr.${NEW_RELEASE}
-    fi
-
     echo -n "Start restoring configuration files ... "
     (
       cd /
       eval tar czf ${NEW_ROOT_MP}/.reserved/openwrt_config.tar.gz "${BACKUP_LIST}" 2>/dev/null
     )
     tar xzf ${NEW_ROOT_MP}/.reserved/openwrt_config.tar.gz
-    if  [ ${OLD_RELEASE} -le 200311 ] && [ ${NEW_RELEASE} -ge 200319 ];then
-        mv ./etc/config/shadowsocksr ./etc/config/shadowsocksr.${OLD_RELEASE}
-        mv ./etc/config/shadowsocksr.${NEW_RELEASE} ./etc/config/shadowsocksr
-    fi
 
-    sed -e "s/option wan_mode 'false'/option wan_mode 'true'/" -i ./etc/config/dockerman 2>/dev/null
-    sed -e 's/config setting/config verysync/' -i ./etc/config/verysync 2>/dev/null
+    [ -f ./etc/config/dockerman ] && sed -e "s/option wan_mode 'false'/option wan_mode 'true'/" -i ./etc/config/dockerman 2>/dev/null
+    [ -f ./etc/config/dockerd ] && sed -e "s/option wan_mode '0'/option wan_mode '1'/" -i ./etc/config/dockerd 2>/dev/null
+    [ -f ./etc/config/verysync ] && sed -e 's/config setting/config verysync/' -i ./etc/config/verysync 2>/dev/null
     sync
     echo "Restore configuration information complete."
 fi
@@ -450,6 +459,8 @@ EOF
             else
                 yn="n"
             fi
+        elif [[ "${AUTO_MAINLINE_UBOOT}" == "NO" ]]; then
+                yn="n"
         else
             read -p "Please choose whether to write the mainline bootloader to EMMC?  y/n " yn
         fi
@@ -482,16 +493,56 @@ cd ${WORK_DIR}
 echo "Start copying data， from [ ${P1} ] to [ /boot ] ..."
 cd /boot
 echo "Delete the old boot file ..."
-cp uEnv.txt /tmp/uEnv.txt
-rm -rf *
+rm -rf * && sync
 
 echo "Copy the new boot file ... "
 (cd ${P1} && tar cf - . ) | tar xf -
 sync
 
+if [ -f ${P1}/uInitrd ]; then
+    i=1
+    max_try=10
+    while [ "${i}" -le "${max_try}" ]; do
+        uInitrd_original=$(md5sum ${P1}/uInitrd | awk '{print $1}')
+        uInitrd_new=$(md5sum uInitrd | awk '{print $1}')
+        if [ "${uInitrd_original}" = "${uInitrd_new}" ]; then
+            break
+        else
+            rm -f uInitrd && sync
+            cp -f ${P1}/uInitrd uInitrd 2>/dev/null && sync
+            let i++
+            continue
+        fi
+    done
+    [ "${i}" -eq "10" ] && echo "uInitrd file copy failed." && exit 1
+else
+    echo "uInitrd file is missing."
+fi
+
+if [ -f ${P1}/zImage ]; then
+    i=1
+    max_try=10
+    while [ "${i}" -le "${max_try}" ]; do
+        zImage_original=$(md5sum ${P1}/zImage | awk '{print $1}')
+        zImage_new=$(md5sum zImage | awk '{print $1}')
+        if [ "${zImage_original}" = "${zImage_new}" ]; then
+            break
+        else
+            rm -f zImage && sync
+            cp -f ${P1}/zImage zImage 2>/dev/null && sync
+            let i++
+            continue
+        fi
+    done
+    [ "${i}" -eq "10" ] && echo "zImage file copy failed." && exit 1
+else
+    echo "zImage file is missing."
+    exit 1
+fi
+
 rm -f s905_autoscript* aml_autoscript*
 
-if  [[ "${U_BOOT_EXT}" -eq "1" && "${K510}" -eq "1" ]]; then
+if  [[ "${K510}" -eq "1" ]]; then
     if  [ -f u-boot.ext ]; then
         cp -f -v u-boot.ext u-boot.emmc
     else
